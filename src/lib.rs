@@ -291,6 +291,10 @@ impl<SPI: SpiDevice, DC: OutputPin, RST: OutputPin> DrawTarget for ST7735Buffere
         I: IntoIterator<Item = Pixel<Self::Color>>,
     {
         let size = self.size();
+        if self.back_buffer.is_empty() {
+            return Err(());
+        }
+
         for pixel in pixels {
             let pos = pixel.0;
             let color = pixel.1;
