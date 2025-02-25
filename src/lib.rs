@@ -14,20 +14,16 @@ use embedded_hal::{delay::DelayNs, spi::SpiDevice};
 use embedded_graphics_core::{draw_target::DrawTarget, pixelcolor::Rgb565, prelude::*};
 
 /// ST7735 driver to connect to TFT displays.
-pub struct ST7735Buffered<SPI, DC, RST>
+pub struct ST7735Buffered<SPI, DC>
 where
     SPI: spi::SpiDevice,
     DC: OutputPin,
-    RST: OutputPin,
 {
     /// SPI
     spi: SPI,
 
     /// Data/command pin.
     dc: DC,
-
-    /// Reset pin.
-    rst: Option<RST>,
 
     /// Whether the display is RGB (true) or BGR (false)
     rgb: bool,
@@ -49,11 +45,10 @@ pub enum Orientation {
     LandscapeSwapped = 0xA0,
 }
 
-impl<SPI, DC, RST> ST7735Buffered<SPI, DC, RST>
+impl<SPI, DC> ST7735Buffered<SPI, DC>
 where
     SPI: spi::SpiDevice,
     DC: OutputPin,
-    RST: OutputPin,
 {
     /// Creates a new driver instance that uses hardware SPI.
     /// # Examples
@@ -66,11 +61,10 @@ where
     /// display.set_offset(0, 0);
     /// display.clear(Rgb565::BLACK).unwrap();
     /// ```
-    pub fn new(spi: SPI, dc: DC, rst: Option<RST>, rgb: bool, width: u32, height: u32) -> Self {
+    pub fn new(spi: SPI, dc: DC, rgb: bool, width: u32, height: u32) -> Self {
         let display = ST7735Buffered {
             spi,
             dc,
-            rst,
             rgb,
             dx: 0,
             dy: 0,
@@ -94,7 +88,6 @@ where
     where
         DELAY: DelayNs,
     {
-        self.hard_reset(delay)?;
         self.write_command(Instruction::SWRESET, &[])?;
         delay.delay_ms(200);
         self.write_command(Instruction::SLPOUT, &[])?;
@@ -123,7 +116,6 @@ where
         Ok(())
     }
 
-    
     fn clear(&mut self) -> Result<(), ()> {
         self.set_pixels_buffered(
             0,
@@ -135,17 +127,16 @@ where
         )
     }
 
-    pub fn hard_reset<DELAY>(&mut self, delay: &mut DELAY) -> Result<(), ()>
+    pub fn hard_reset<DELAY, RST>(&mut self, delay: &mut DELAY, rst: &mut RST) -> Result<(), ()>
     where
         DELAY: DelayNs,
+        RST: OutputPin,
     {
-        if let Some(rst) = &mut self.rst {
-            rst.set_high().map_err(|_| ())?;
-            delay.delay_ms(10);
-            rst.set_low().map_err(|_| ())?;
-            delay.delay_ms(10);
-            rst.set_high().map_err(|_| ())?;
-        }
+        rst.set_high().map_err(|_| ())?;
+        delay.delay_ms(10);
+        rst.set_low().map_err(|_| ())?;
+        delay.delay_ms(10);
+        rst.set_high().map_err(|_| ())?;
         Ok(())
     }
 
@@ -188,7 +179,6 @@ where
         self.write_data(&buffer[0..index])
     }
 
-    
     /// Whether the colours are inverted (true) or not (false)
     pub fn set_inversion(&mut self, inverted: bool) -> Result<(), ()> {
         if inverted {
@@ -281,7 +271,7 @@ where
     }
 }
 
-impl<SPI: SpiDevice, DC: OutputPin, RST: OutputPin> DrawTarget for ST7735Buffered<SPI, DC, RST> {
+impl<SPI: SpiDevice, DC: OutputPin> DrawTarget for ST7735Buffered<SPI, DC> {
     type Color = Rgb565;
 
     type Error = ();
@@ -316,11 +306,10 @@ impl<SPI: SpiDevice, DC: OutputPin, RST: OutputPin> DrawTarget for ST7735Buffere
     }
 }
 
-impl<SPI, DC, RST> OriginDimensions for ST7735Buffered<SPI, DC, RST>
+impl<SPI, DC> OriginDimensions for ST7735Buffered<SPI, DC>
 where
     SPI: spi::SpiDevice,
     DC: OutputPin,
-    RST: OutputPin,
 {
     fn size(&self) -> Size {
         Size::new(self.width, self.height)

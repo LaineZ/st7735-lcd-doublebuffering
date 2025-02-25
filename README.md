@@ -17,7 +17,7 @@ Wiring:
 VCC -> Any 3.3V pin
 GND -> Any GND pin
 CS -> Any GND pin (unused in this exmaple)
-RESET -> IO06
+RESET -> RST (or ANY GPIO for example IO06)
 A0 -> IO07
 SDA -> IO03
 SCL -> IO02
@@ -51,7 +51,8 @@ fn main() {
         spi::SpiDeviceDriver::new_single(spi, sclk, sdo, sdi, cs, &driver_config, &spi_config)
             .unwrap();
 
-    let rst = PinDriver::output(peripherals.pins.gpio6).unwrap();
+    // uncomment this to use GPIO6 as RST
+    //let rst = PinDriver::output(peripherals.pins.gpio6).unwrap();
     let dc = PinDriver::output(peripherals.pins.gpio7).unwrap();
 
     let rgb = true;
@@ -61,6 +62,8 @@ fn main() {
     let mut delay = FreeRtos;
     let mut display = ST7735Buffered::new(spi, dc, Some(rst), rgb, width, height);
 
+    // uncomment this if you use GPIO as RST pin
+    //display.hard_reset(&mut delay, rst);
     display
         .init(&mut delay, &Orientation::LandscapeSwapped)
         .unwrap();
