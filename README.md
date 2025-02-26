@@ -1,7 +1,7 @@
 # st7735-lcd-doublebuffering
 
 This is a library for LCD TFT Displays ST7735 with double buffering, uses ``alloc`` for buffers allocations. Designed for powerful MCU's like ESP32
-This library only works with [embedded_graphics](https://github.com/embedded-graphics/embedded-graphics).
+This library only works with [embedded_graphics](https://github.com/embedded-graphics/embedded-graphics). Based on [st7735-lcd-rs](https://github.com/sajattack/st7735-lcd-rs)
 
 # Features
 * Double Buffering: Smooth updates without screen flicker, ensuring high-quality display performance.
@@ -60,7 +60,7 @@ fn main() {
     let height = 128;
 
     let mut delay = FreeRtos;
-    let mut display = ST7735Buffered::new(spi, dc, Some(rst), rgb, width, height);
+    let mut display = ST7735Buffered::new(spi, dc, rgb, width, height);
 
     // uncomment this if you use GPIO as RST pin
     //display.hard_reset(&mut delay, rst);

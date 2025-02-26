@@ -21,10 +21,8 @@ where
 {
     /// SPI
     spi: SPI,
-
     /// Data/command pin.
     dc: DC,
-
     /// Whether the display is RGB (true) or BGR (false)
     rgb: bool,
     /// Global image offset
@@ -55,7 +53,7 @@ where
     /// ```ignore
     /// // Initialization of 1.8" TFT module with 160×128 resoulution in landscape orientation
     /// // ... platform-dependent SPI initialization and GPIO
-    /// let mut display = st7735_lcd::ST7735::new(spi, dc, rst, true, 160, 128);
+    /// let mut display = st7735_lcd::ST7735::new(spi, dc, true, 160, 128);
     /// display.init(&mut delay).unwrap();
     /// display.set_orientation(&Orientation::LandscapeSwapped).unwrap();
     /// display.set_offset(0, 0);
@@ -127,6 +125,7 @@ where
         )
     }
 
+    /// Hardware reset via GPIO, use this if RST connected via generic GPIO pin. Call BEFORE init
     pub fn hard_reset<DELAY, RST>(&mut self, delay: &mut DELAY, rst: &mut RST) -> Result<(), ()>
     where
         DELAY: DelayNs,
@@ -190,6 +189,7 @@ where
         Ok(())
     }
 
+    /// Sets the display orientation
     pub fn set_orientation(&mut self, orientation: &Orientation) -> Result<(), ()> {
         if self.rgb {
             self.write_command(Instruction::MADCTL, &[*orientation as u8])?;
@@ -243,7 +243,7 @@ where
     /// # Examples
     /// ```ignore
     /// // .. initialization of SPI, GPIO, display ..
-    /// let mut display = ST7735Buffered::new(spi, dc, rst, rgb, inverted, width, height);
+    /// let mut display = ST7735Buffered::new(spi, dc, rgb, inverted, width, height);
     /// display.init(&mut delay).unwrap();
     /// display.set_orientation(&Orientation::Landscape).unwrap();
     /// display.set_offset(0, 0);
