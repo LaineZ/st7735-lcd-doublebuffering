@@ -1,5 +1,5 @@
 #![no_std]
-//! This crate provides a Double buffered ST7735 TFT driver. Based on [st7735-lcd-rs](https://github.com/sajattack/st7735-lcd-rs)
+//! This crate provides a Double-buffered ST7735 TFT driver. Based on [st7735-lcd-rs](https://github.com/sajattack/st7735-lcd-rs)
 extern crate alloc;
 
 pub(crate) mod instruction;
@@ -12,6 +12,14 @@ use embedded_hal::spi;
 use embedded_hal::{delay::DelayNs, spi::SpiDevice};
 
 use embedded_graphics_core::{draw_target::DrawTarget, pixelcolor::Rgb565, prelude::*};
+
+pub const DEFAULT_HIGH_GAMMA_CURVE: [u8; 16] = [
+    0x02, 0x1c, 0x07, 0x12, 0x37, 0x32, 0x29, 0x2c, 0x29, 0x25, 0x2b, 0x39, 0x00, 0x01, 0x03, 0x10,
+];
+
+pub const DEFAULT_LOW_GAMMA_CURVE: [u8; 16] = [
+    0x03, 0x1d, 0x07, 0x06, 0x2E, 0x2C, 0x29, 0x2c, 0x2e, 0x2e, 0x37, 0x3f, 0x00, 0x00, 0x02, 0x10,
+];
 
 /// ST7735 driver to connect to TFT displays.
 pub struct ST7735Buffered<SPI, DC>
@@ -30,7 +38,6 @@ where
     dy: u16,
     width: u32,
     height: u32,
-    front_buffer: Vec<Rgb565>,
     back_buffer: Vec<Rgb565>,
 }
 
@@ -68,10 +75,6 @@ where
             dy: 0,
             width,
             height,
-            front_buffer: alloc::vec![
-                Rgb565::BLACK;
-                width as usize * height as usize
-            ],
             back_buffer: alloc::vec![
                 Rgb565::BLACK;
                 width as usize * height as usize
@@ -100,6 +103,8 @@ where
         self.write_command(Instruction::PWCTR4, &[0x8A, 0x2A])?;
         self.write_command(Instruction::PWCTR5, &[0x8A, 0xEE])?;
         self.write_command(Instruction::VMCTR1, &[0x0E])?;
+        self.write_command(Instruction::GMCTRP1, &DEFAULT_HIGH_GAMMA_CURVE)?;
+        self.write_command(Instruction::GMCTRN1, &DEFAULT_LOW_GAMMA_CURVE)?;
         self.write_command(Instruction::INVOFF, &[])?;
         if self.rgb {
             self.write_command(Instruction::MADCTL, &[0x00])?;
@@ -238,7 +243,6 @@ where
     /// Swaps the front and back buffers and updates the display.
     /// # Performance
     /// - Reduces flickering by ensuring that partial frame updates are not displayed.
-    /// - The buffer swap is an O(1) operation, but sending pixel data to the display is dependent on SPI speed and display resolution.
     /// - Displays by itself limited by internal RAM-buffer speed, so you never exceed ~20 fps, even your beautiful UI framework draws in 1000+ fps
     /// # Examples
     /// ```ignore
@@ -262,8 +266,7 @@ where
     /// ```
     pub fn swap_buffers(&mut self) -> Result<(), ()> {
         let size = self.size();
-        core::mem::swap(&mut self.front_buffer, &mut self.back_buffer);
-        let pixels = core::mem::take(&mut self.front_buffer)
+        let pixels = core::mem::take(&mut self.back_buffer)
             .into_iter()
             .map(|f| RawU16::from(f).into_inner());
 

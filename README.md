@@ -1,4 +1,8 @@
 # st7735-lcd-doublebuffering
+[![Crates.io](https://img.shields.io/crates/d/st7735-lcd-doublebuffering)](https://crates.io/crates/st7735-lcd-doublebuffering)
+[![Crates.io](https://img.shields.io/crates/v/st7735-lcd-doublebuffering)](https://crates.io/crates/st7735-lcd-doublebuffering)
+
+[![forthebadge](https://forthebadge.com/images/badges/powered-by-electricity.svg)](https://forthebadge.com)
 
 This is a library for LCD TFT Displays ST7735 with double buffering, uses ``alloc`` for buffers allocations. Designed for powerful MCU's like ESP32
 This library only works with [embedded_graphics](https://github.com/embedded-graphics/embedded-graphics). Based on [st7735-lcd-rs](https://github.com/sajattack/st7735-lcd-rs)

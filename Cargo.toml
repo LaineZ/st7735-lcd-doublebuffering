@@ -5,7 +5,7 @@ authors = ["140bpmdubstep <laineprikol@gmail.com>", "Paul Sajna <sajattack@gmail
 repository = "https://github.com/LaineZ/st7735-lcd-doublebuffering"
 keywords = ["embedded", "graphics", "lcd", "st7735", "no_std"]
 license = "MIT"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 
 [dependencies]
